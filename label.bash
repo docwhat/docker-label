@@ -3,11 +3,16 @@
 set -eEuo pipefail
 
 typeset -a labels=()
+typeset -a command=()
 
 add() {
-  labels+=("$1=$2")
+  labels+=("--label=$1=$2")
 }
 
+while (($# > 0)); do
+  command+=("$1")
+  shift
+done
 add org.opencontainers.image.created "$(date -u '+%Y-%m-%d %H:%M:%S+00:00')"
 
 add org.opencontainers.image.revision "$(git rev-parse HEAD)"
@@ -46,6 +51,10 @@ add org.opencontainers.image.source "$(git remote get-url origin)"
 # org.opencontainers.image.title Human-readable title of the image (string)
 # org.opencontainers.image.description
 
-for label in "${labels[@]}"; do
-  echo "--label=${label}"
-done
+if [ -z "$command" ]; then
+  for label in "${labels[@]}"; do
+    echo "${label}"
+  done
+else
+  "${command[@]}" "${labels[@]}"
+fi
